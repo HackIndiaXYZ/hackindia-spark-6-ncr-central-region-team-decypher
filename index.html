@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>TaskMind | The Magical Task Manager</title>
+    <meta
+      name="description"
+      content="AI-powered task manager with OCR, Gmail sync, and SMS reminders. Turn your thoughts into structured tasks instantly."
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="topbar"></div>
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <div class="logo-icon">🪄</div>
+          <span>TaskMind</span>
+        </div>
+        <nav class="nav">
+          <button class="nav-btn active" id="nav-home" data-page="home">
+            🏠 Home
+          </button>
+          <button class="nav-btn" id="nav-tasks" data-page="tasks">
+            ✅ Tasks
+          </button>
+          <button class="nav-btn" id="nav-calendar" data-page="calendar">
+            📅 Calendar
+          </button>
+          <button class="nav-btn" id="nav-analytics" data-page="analytics">
+            📊 Analytics
+          </button>
+        </nav>
+        <div class="header-actions">
+          <button class="btn-add" onclick="openModal('add-modal')">
+            ＋ Add Task
+          </button>
+          <button
+            class="btn-icon"
+            id="theme-btn"
+            onclick="toggleTheme()"
+            title="Toggle theme"
+          >
+            🌙
+          </button>
+          <button
+            onclick="logout()"
+            class="btn-secondary"
+            style="
+              padding: 8px 14px;
+              border-radius: 10px;
+              border: 1px solid var(--border);
+              font-size: 13px;
+              font-weight: 500;
+            "
+          >
+            Logout
+          </button>
+          <div class="avatar">AI</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- ═══════════════════════════════ HOME PAGE ═══════════════════════════════ -->
+      <div class="page active" id="page-home">
+        <!-- AI Insight Banner -->
+        <div class="insight-banner">
+          <span>✨ AI Insight:</span>
+          <span id="ai-insight-text">Loading your personalized insight...</span>
+        </div>
+
+        <!-- Welcome + Stats -->
+        <div class="grid-4" style="margin-bottom: 16px">
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1)">
+              📋
+            </div>
+            <div class="stat-value" id="stat-total">0</div>
+            <div class="stat-label">Total Tasks</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1)">
+              ⏰
+            </div>
+            <div class="stat-value" id="stat-today" style="color: #d97706">
+              0
+            </div>
+            <div class="stat-label">Due Today</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1)">
+              ⚠️
+            </div>
+            <div class="stat-value" id="stat-overdue" style="color: #dc2626">
+              0
+            </div>
+            <div class="stat-label">Overdue</div>
+          </div>
+          <div class="card stat-card streak-card">
+            <div class="streak-icon">🔥</div>
+            <div class="streak-value" id="stat-streak">1</div>
+            <div class="streak-label">Day Streak</div>
+          </div>
+        </div>
+
+        <!-- Tasks + Calendar + Chart -->
+        <div class="grid-3 mt4">
+          <!-- Task Preview -->
+          <div class="card" style="grid-column: span 1">
+            <div class="card-header">
+              <span class="card-title">📋 Recent Tasks</span>
+              <button
+                class="card-link"
+                style="border: none; background: none"
+                onclick="showPage('tasks')"
+              >
+                View all →
+              </button>
+            </div>
+            <div id="home-task-list">
+              <div class="empty-state">
+                <div class="empty-icon">✅</div>
+                <p class="empty-title">No tasks yet</p>
+                <p class="empty-sub">Use + Add Task to get started</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mini Calendar -->
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📅 Calendar</div>
+                <div
+                  style="font-size: 12px; color: var(--muted)"
+                  id="cal-month-label"
+                >
+                  April 2026
+                </div>
+              </div>
+              <button
+                class="card-link"
+                style="border: none; background: none"
+                onclick="showPage('calendar')"
+              >
+                Full →
+              </button>
+            </div>
+            <div class="calendar-grid" style="margin-bottom: 8px">
+              <div class="cal-day-label">S</div>
+              <div class="cal-day-label">M</div>
+              <div class="cal-day-label">T</div>
+              <div class="cal-day-label">W</div>
+              <div class="cal-day-label">T</div>
+              <div class="cal-day-label">F</div>
+              <div class="cal-day-label">S</div>
+            </div>
+            <div class="calendar-grid" id="cal-grid"></div>
+          </div>
+
+          <!-- Analytics Preview -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📊 This Week</span>
+              <button
+                class="card-link"
+                style="border: none; background: none"
+                onclick="showPage('analytics')"
+              >
+                Details →
+              </button>
+            </div>
+            <div class="chart-wrap" id="chart-bars"></div>
+            <div class="chart-legend mt4">
+              <span
+                ><span
+                  class="chart-legend-dot"
+                  style="background: var(--border)"
+                ></span
+                >Extracted</span
+              >
+              <span
+                ><span
+                  class="chart-legend-dot"
+                  style="background: var(--em)"
+                ></span
+                >Completed</span
+              >
+            </div>
+            <div
+              class="mt4"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+              "
+            >
+              <div>
+                <div style="font-size: 24px; font-weight: 800" id="stat-rate">
+                  0%
+                </div>
+                <div style="font-size: 12px; color: var(--muted)">
+                  Completion Rate
+                </div>
+              </div>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" id="rate-bar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Insights -->
+        <div class="mt6">
+          <div class="card-header">
+            <span class="card-title">💡 AI Insights</span>
+          </div>
+          <div class="grid-3" id="insights-list"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════ TASKS PAGE ══════════════════════════════ -->
+      <div class="page" id="page-tasks">
+        <div class="section-title">My Tasks</div>
+        <div class="section-sub">All your extracted and scheduled tasks</div>
+
+        <!-- Stats Row -->
+        <div class="grid-4" style="margin-bottom: 20px">
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1)">
+              📋
+            </div>
+            <div class="stat-value" id="stat-total-t">0</div>
+            <div class="stat-label">Total Tasks</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1)">
+              ⏰
+            </div>
+            <div class="stat-value" id="stat-today-t" style="color: #d97706">
+              0
+            </div>
+            <div class="stat-label">Due Today</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1)">
+              ⚠️
+            </div>
+            <div class="stat-value" id="stat-overdue-t" style="color: #dc2626">
+              0
+            </div>
+            <div class="stat-label">Overdue</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon" style="background: rgba(59, 130, 246, 0.1)">
+              📈
+            </div>
+            <div class="stat-value" id="stat-week-t" style="color: #2563eb">
+              0
+            </div>
+            <div class="stat-label">Remaining</div>
+          </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-filter="all">All</button>
+          <button class="filter-tab" data-filter="high">
+            🔴 High Priority
+          </button>
+          <button class="filter-tab" data-filter="today">📅 Due Today</button>
+          <button class="filter-tab" data-filter="done">✅ Completed</button>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+          "
+        >
+          <span style="font-size: 13px; color: var(--muted)" id="tasks-count"
+            >0 tasks</span
+          >
+          <button
+            class="btn-add"
+            style="padding: 8px 14px; font-size: 13px"
+            onclick="openModal('add-modal')"
+          >
+            ＋ Add Task
+          </button>
+        </div>
+
+        <div id="tasks-list" class="task-list">
+          <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <p class="empty-title">No tasks yet</p>
+            <p class="empty-sub">Add tasks using the button above</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════ CALENDAR PAGE ═══════════════════════════ -->
+      <div class="page" id="page-calendar">
+        <div class="section-title">📅 Calendar</div>
+        <div class="section-sub">Your tasks and deadlines by date</div>
+        <div class="card">
+          <div class="calendar-header">
+            <div>
+              <div
+                class="card-title"
+                style="font-size: 18px"
+                id="cal-full-label"
+              >
+                April 2026
+              </div>
+              <div
+                style="font-size: 12px; color: var(--muted); margin-top: 2px"
+              >
+                🟢 Dates with tasks highlighted
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px">
+              <button class="cal-nav-btn" onclick="shiftMonth(-1)">←</button>
+              <button class="cal-nav-btn" onclick="shiftMonth(1)">→</button>
+            </div>
+          </div>
+          <div class="calendar-grid" style="margin-bottom: 12px">
+            <div class="cal-day-label">Sun</div>
+            <div class="cal-day-label">Mon</div>
+            <div class="cal-day-label">Tue</div>
+            <div class="cal-day-label">Wed</div>
+            <div class="cal-day-label">Thu</div>
+            <div class="cal-day-label">Fri</div>
+            <div class="cal-day-label">Sat</div>
+          </div>
+          <div class="calendar-grid" id="cal-grid-full"></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════ ANALYTICS PAGE ══════════════════════════ -->
+      <div class="page" id="page-analytics">
+        <div class="section-title">📊 Analytics</div>
+        <div class="section-sub">
+          Your productivity insights and task metrics
+        </div>
+        <div class="analytics-grid">
+          <!-- Weekly Chart -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Weekly Overview</span>
+            </div>
+            <div
+              class="chart-wrap"
+              id="analytics-chart"
+              style="height: 200px"
+            ></div>
+            <div class="chart-legend mt4">
+              <span
+                ><span
+                  class="chart-legend-dot"
+                  style="background: var(--border)"
+                ></span
+                >Extracted</span
+              >
+              <span
+                ><span
+                  class="chart-legend-dot"
+                  style="background: var(--em)"
+                ></span
+                >Completed</span
+              >
+            </div>
+          </div>
+
+          <!-- Completion Donut -->
+          <div class="card" style="display: flex; flex-direction: column">
+            <div class="card-header">
+              <span class="card-title">Completion Rate</span>
+            </div>
+            <div class="donut-wrap" style="flex: 1">
+              <svg class="donut-svg" viewBox="0 0 100 100">
+                <circle class="donut-ring donut-bg" cx="50" cy="50" r="44" />
+                <circle
+                  class="donut-ring donut-fg"
+                  id="donut-fg"
+                  cx="50"
+                  cy="50"
+                  r="44"
+                  stroke-dasharray="0 276.5"
+                />
+                <text class="donut-label" x="50" y="50" id="donut-text">
+                  0%
+                </text>
+              </svg>
+              <div class="donut-sub">Tasks completed this week</div>
+            </div>
+          </div>
+
+          <!-- Streak Card -->
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🔥 Streak</span>
+            </div>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                padding: 12px 0;
+              "
+            >
+              <div
+                class="streak-icon"
+                style="width: 64px; height: 64px; font-size: 30px"
+              >
+                🔥
+              </div>
+              <div>
+                <div
+                  style="font-size: 40px; font-weight: 800"
+                  id="stat-streak-a"
+                >
+                  1
+                </div>
+                <div style="font-size: 14px; color: var(--muted)">
+                  Days without missed deadlines
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Insights -->
+          <div class="card full-width">
+            <div class="card-header">
+              <span class="card-title">💡 AI Productivity Insights</span>
+            </div>
+            <div class="grid-3" id="insights-list-a"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- /main -->
+
+    <!-- FAB -->
+    <button class="fab" onclick="openModal('add-modal')" title="Add Task">
+      ＋
+    </button>
+    <div id="toast-stack"></div>
+
+    <!-- ════════════════ ADD TASK MODAL ════════════════ -->
+    <div class="modal-overlay" id="add-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">＋ Add Task</div>
+          <button class="modal-close" onclick="closeModal('add-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <!-- Tabs -->
+          <div class="modal-tabs">
+            <button class="modal-tab active" data-tab="text">✏️ Text</button>
+            <button class="modal-tab" data-tab="ocr">📷 Screenshot</button>
+            <button class="modal-tab" data-tab="gmail">📧 Gmail</button>
+          </div>
+
+          <!-- Text Tab -->
+          <div class="tab-panel active" id="tab-text">
+            <div class="form-group">
+              <label class="form-label">Brain Dump</label>
+              <textarea
+                class="form-textarea"
+                id="text-input"
+                placeholder="e.g. I need to finish the React project by tomorrow night, call mom on Sunday, and prepare slides for Monday 9AM meeting..."
+              ></textarea>
+              <div class="form-hint">
+                Paste any free-form text — Gemini AI will extract and prioritize
+                tasks automatically
+              </div>
+            </div>
+            <!-- Example Chips -->
+            <div
+              style="
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin-bottom: 16px;
+              "
+            >
+              <button
+                onclick="loadExample(0)"
+                style="
+                  padding: 5px 12px;
+                  border-radius: 8px;
+                  border: 1px solid var(--border);
+                  background: none;
+                  font-size: 12px;
+                  color: var(--muted);
+                  cursor: pointer;
+                "
+              >
+                Example 1
+              </button>
+              <button
+                onclick="loadExample(1)"
+                style="
+                  padding: 5px 12px;
+                  border-radius: 8px;
+                  border: 1px solid var(--border);
+                  background: none;
+                  font-size: 12px;
+                  color: var(--muted);
+                  cursor: pointer;
+                "
+              >
+                Example 2
+              </button>
+              <button
+                onclick="loadExample(2)"
+                style="
+                  padding: 5px 12px;
+                  border-radius: 8px;
+                  border: 1px solid var(--border);
+                  background: none;
+                  font-size: 12px;
+                  color: var(--muted);
+                  cursor: pointer;
+                "
+              >
+                Example 3
+              </button>
+            </div>
+            <button
+              class="btn-primary"
+              id="extract-btn"
+              onclick="extractText()"
+            >
+              <span>✨ Extract Tasks with Gemini AI</span>
+            </button>
+          </div>
+
+          <!-- OCR Tab -->
+          <div class="tab-panel" id="tab-ocr">
+            <div class="dropzone" id="dropzone">
+              <div class="dropzone-icon">📷</div>
+              <div class="dropzone-text">Drop a screenshot here</div>
+              <div class="dropzone-sub">
+                or click to browse — supports PNG, JPG, WebP
+              </div>
+            </div>
+            <input
+              type="file"
+              id="ocr-file-input"
+              accept="image/*"
+              style="display: none"
+            />
+            <div class="form-hint mt4">
+              Gemini Vision will read all text from the screenshot and extract
+              actionable tasks with deadlines and priorities
+            </div>
+            <button
+              class="btn-primary mt4"
+              id="ocr-btn"
+              onclick="$('ocr-file-input').click()"
+            >
+              <span>📷 Upload Screenshot</span>
+            </button>
+          </div>
+
+          <!-- Gmail Tab -->
+          <div class="tab-panel" id="tab-gmail">
+            <div class="gmail-connect">
+              <span style="font-size: 28px">📧</span>
+              <div class="gmail-connect-info">
+                <h4>Gmail Integration</h4>
+                <p id="gmail-status">
+                  Connect your Gmail to auto-import tasks from emails
+                </p>
+              </div>
+              <button class="btn-gmail" id="gmail-btn" onclick="connectGmail()">
+                🔗 Connect Gmail
+              </button>
+            </div>
+            <div class="form-hint" style="margin-bottom: 16px">
+              Uses OAuth 2.0 — we only read email subjects and previews, never
+              store your data
+            </div>
+            <button
+              class="btn-primary"
+              id="gmail-fetch-btn"
+              onclick="fetchGmailTasks()"
+            >
+              <span>📥 Fetch &amp; Extract Tasks from Emails</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════ REMINDER MODAL ════════════════ -->
+    <div class="modal-overlay" id="calendar-day-modal">
+      <div class="modal reminder-modal">
+        <div class="modal-header">
+          <div class="modal-title" id="calendar-modal-title">
+            Calendar Tasks
+          </div>
+          <button
+            class="modal-close"
+            onclick="closeModal('calendar-day-modal')"
+          >
+            ×
+          </button>
+        </div>
+        <div class="modal-body" id="calendar-modal-body"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay" id="reminder-modal">
+      <div class="modal reminder-modal">
+        <div class="modal-header">
+          <div class="modal-title">🔔 Set Reminder</div>
+          <button class="modal-close" onclick="closeModal('reminder-modal')">
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <div
+            style="
+              padding: 12px 16px;
+              background: var(--em-bg);
+              border: 1px solid rgba(16, 185, 129, 0.2);
+              border-radius: 10px;
+              margin-bottom: 20px;
+            "
+          >
+            <div
+              style="font-size: 12px; color: var(--muted); margin-bottom: 2px"
+            >
+              Task
+            </div>
+            <div
+              style="font-size: 14px; font-weight: 600"
+              id="reminder-task-name"
+            >
+              Task name
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">📱 Phone Number (E.164 format)</label>
+            <input
+              type="tel"
+              class="form-input"
+              id="reminder-phone"
+              placeholder="+919876543210"
+            />
+            <div class="form-hint">Include country code e.g. +91 for India</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label"
+              >⏰ Remind At (optional — leave blank to send now)</label
+            >
+            <input
+              type="datetime-local"
+              class="form-input"
+              id="reminder-when"
+            />
+            <div class="form-hint">
+              Schedule a future SMS reminder — powered by Twilio
+            </div>
+          </div>
+          <button
+            class="btn-primary"
+            id="reminder-send-btn"
+            onclick="sendReminder()"
+          >
+            <span>📱 Send SMS Reminder</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script type="application/json" id="legacy-inline-disabled">
+      // Sync task page stats with home stats
+      function updateStats() {
+        const total   = state.tasks.length;
+        const today   = state.tasks.filter(t => t.deadline && /today/i.test(t.deadline)).length;
+        const overdue = state.tasks.filter(t => t.deadline && /overdue|yesterday|last/i.test(t.deadline)).length;
+        const week    = state.tasks.filter(t => !t.done).length;
+        const done    = state.tasks.filter(t => t.done).length;
+        const rate    = total ? Math.round((done / total) * 100) : 0;
+        ['stat-total','stat-total-t'].forEach(id => setText(id, total));
+        ['stat-today','stat-today-t'].forEach(id => setText(id, today));
+        ['stat-overdue','stat-overdue-t'].forEach(id => setText(id, overdue));
+        ['stat-week','stat-week-t'].forEach(id => setText(id, week));
+        setText('stat-rate', rate + '%');
+        const bar = $('rate-bar'); if (bar) bar.style.width = rate + '%';
+        updateDonut(rate);
+        ['stat-streak','stat-streak-a'].forEach(id => setText(id, state.dashboard?.day_streak ?? 1));
+      }
+
+      // Analytics page: duplicate insight rendering
+      const origApplyData = window.applyData;
+      window.applyData = function(data) {
+        origApplyData(data);
+        if (data.dashboard?.insights) {
+          const el = $('insights-list-a');
+          if (el) {
+            const colors = { amber:'#f59e0b', blue:'#3b82f6', green:'#10b981' };
+            const icons  = { amber:'⚡', blue:'🎯', green:'🏆' };
+            el.innerHTML = (data.dashboard.insights || []).map(i => `
+              <div class="insight-card">
+                <div class="insight-icon" style="background:${colors[i.tone]||'#10b981'}22">${icons[i.tone]||'✨'}</div>
+                <div class="insight-content">
+                  <div class="insight-title">${esc(i.title)}</div>
+                  <div class="insight-detail">${esc(i.detail)}</div>
+                </div>
+              </div>`).join('');
+          }
+        }
+      };
+
+      // Full calendar uses separate grid
+      function renderCalendar(containerId, labelId) {
+        const ids = containerId ? [containerId] : ['cal-grid','cal-grid-full'];
+        const labels = labelId ? [labelId] : ['cal-month-label','cal-full-label'];
+        ids.forEach((cid, idx) => {
+          const grid = $(cid); const label = $(labels[idx]);
+          if (!grid) return;
+          const now = new Date();
+          const d = new Date(now.getFullYear(), now.getMonth() + state.calOffset, 1);
+          if (label) label.textContent = d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+          const firstDay = d.getDay(), daysInMonth = new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+          const today = now.getDate(), isCurrentMonth = state.calOffset === 0;
+          grid.innerHTML = '';
+          for(let i=0;i<firstDay;i++) grid.innerHTML+=`<div class="cal-day empty">0</div>`;
+          for(let day=1;day<=daysInMonth;day++){
+            const isToday = isCurrentMonth&&day===today;
+            grid.innerHTML+=`<div class="cal-day${isToday?' today':''}">day${day}</div>`.replace(`day${day}`,day);
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
